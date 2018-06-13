@@ -1,0 +1,19 @@
+{
+  "name": "trumpetta-stone",
+  "version": "1.0.0",
+  "description": "Translates Trump, kinda...",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "google-translate-api": "^2.3.0",
+    "twit": "^2.2.10"
+  },
+  "dependencies": {
+    "@google-cloud/translate": "^1.1.0",
+    "fs": "0.0.1-security"
+  }
+}
