@@ -1,10 +1,13 @@
+// node packages
 const Twit = require('twit')
 const Translate = require('@google-cloud/translate')
 const fs = require('fs')
 
+// private auth stuff
 const project = require('./auth/TrumpettaStoneProject.json')
 const TwitterAuth = require('./auth/twitter-auth.json')
 
+// list of already processed tweets
 const processedTweets = require('./processedTweets.json')
 
 const translateAPI = new Translate({
@@ -35,7 +38,6 @@ const languagePipe = [
 T.get('statuses/user_timeline', { screen_name: 'realDonaldTrump', tweet_mode: 'extended' }, (err, data, response) => {
     const tweetData = data
     processTweets(tweetData)
-
 })
 
 processTweets = (tweets) => {
