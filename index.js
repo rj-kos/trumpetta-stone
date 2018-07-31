@@ -1,14 +1,16 @@
 // node packages
 const Twit = require('twit')
 const Translate = require('@google-cloud/translate')
-const fs = require('fs')
+const mysql = require('mysql')
 
 // private auth stuff
 const project = require('./auth/TrumpettaStoneProject.json')
 const TwitterAuth = require('./auth/twitter-auth.json')
+const DbAuth = require('./auth/DbAuth.json')
 
 // list of already processed tweets
-const processedTweets = require('./processedTweets.json')
+// const processedTweets = require('./processedTweets.json')
+let processedTweets = {ids:[]}
 
 const translateAPI = new Translate({
     projectId: project.projectId,
@@ -23,6 +25,25 @@ const T = new Twit({
   timeout_ms:           60 * 1000,
 })
 
+// init mysql connection
+const connection = mysql.createConnection({
+    host     : DbAuth.host,
+    user     : DbAuth.user,
+    password : DbAuth.password,
+    database : DbAuth.database
+})
+
+// start mysql connection
+connection.connect()
+
+connection.query('SELECT * FROM tweets', (error, results, fields) => {
+    if (error) throw error
+    results.forEach(element => {
+        processedTweets.ids.push(element.tweet_id)
+    })
+})
+
+
 let tweetPipe = []
 
 const languagePipe = [
@@ -35,7 +56,7 @@ const languagePipe = [
   ['zh-tw', 'en']
 ]
 
-T.get('statuses/user_timeline', { screen_name: 'realDonaldTrump', tweet_mode: 'extended' }, (err, data, response) => {
+T.get('statuses/user_timeline', { screen_name: 'realDonaldTrump', tweet_mode: 'extended', count: 20 }, (err, data, response) => {
     const tweetData = data
     processTweets(tweetData)
 })
@@ -61,14 +82,18 @@ const oldTweet = (id) => {
 }
 
 const recordTweet = (id, callback) => {
-    let tweetRecords = processedTweets
-    tweetRecords.ids.push(id)
-    const json = JSON.stringify(tweetRecords)
-    fs.writeFile('processedTweets.json', json, 'utf8', callback)
+    connection.query(`INSERT INTO tweets (tweet_id) VALUES (${id})`, (error, results, fields) => {
+        if (error) throw error
+    })
+    callback()
 }
 
 const translateTweets = (tweetIndex) => {
-  if(tweetIndex >= tweetPipe.length) return
+  if(tweetIndex >= tweetPipe.length) {
+        connection.end()
+        console.log('ending connection')
+        return
+    }
   translateTweet(tweetPipe[tweetIndex].text, tweetPipe[tweetIndex].id, 0, tweetIndex)
 }
 

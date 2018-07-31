@@ -10,6 +10,7 @@
   "license": "ISC",
   "devDependencies": {
     "google-translate-api": "^2.3.0",
+    "mysql": "^2.16.0",
     "twit": "^2.2.10"
   },
   "dependencies": {
