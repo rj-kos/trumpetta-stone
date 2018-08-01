@@ -1,34 +1,39 @@
+require('dotenv').load()
+
 // node packages
 const Twit = require('twit')
 const Translate = require('@google-cloud/translate')
 const mysql = require('mysql')
 
-// private auth stuff
-const project = require('./auth/TrumpettaStoneProject.json')
-const TwitterAuth = require('./auth/twitter-auth.json')
-const DbAuth = require('./auth/DbAuth.json')
-
 let processedTweets = {ids:[]}
 
 const translateAPI = new Translate({
-    projectId: project.projectId,
-    keyFilename: './auth/TrumpettaStoneTranslate.json'
+    type: process.env.translate_type,
+    projectId: process.env.translate_project_id,
+    private_key_id: process.env.translate_private_key_id,
+    private_key: process.env.translate_private_key,
+    client_email: process.env.translate_client_email,
+    client_id: process.env.translate_client_id,
+    auth_uri: process.env.translate_auth_uri,
+    token_uri: process.env.translate_token_uri,
+    auth_provider_x509_cert_url: process.env.translate_auth_provider_x509_cert_url,
+    client_x509_cert_url: process.env.translate_client_x509_cert_url
 })
 
 const T = new Twit({
-  consumer_key:         TwitterAuth.consumer_key,
-  consumer_secret:      TwitterAuth.consumer_secret,
-  access_token:         TwitterAuth.access_token,
-  access_token_secret:  TwitterAuth.access_token_secret,
-  timeout_ms:           60 * 1000,
+  consumer_key:         process.env.twitter_consumer_key,
+  consumer_secret:      process.env.twitter_consumer_secret,
+  access_token:         process.env.twitter_access_token,
+  access_token_secret:  process.env.twitter_access_token_secret,
+  timeout_ms:           60 * 1000
 })
 
 // init mysql connection
 const connection = mysql.createConnection({
-    host     : DbAuth.host,
-    user     : DbAuth.user,
-    password : DbAuth.password,
-    database : DbAuth.database
+    host     : process.env.db_host,
+    user     : process.env.db_user,
+    password : process.env.db_password,
+    database : process.env.db_database
 })
 
 // start mysql connection
