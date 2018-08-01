@@ -7,17 +7,19 @@ const mysql = require('mysql')
 
 let processedTweets = {ids:[]}
 
-const translateAPI = new Translate({
-    type: process.env.translate_type,
+const translateAPI = new Translate({    
     projectId: process.env.translate_project_id,
-    private_key_id: process.env.translate_private_key_id,
-    private_key: process.env.translate_private_key,
-    client_email: process.env.translate_client_email,
-    client_id: process.env.translate_client_id,
-    auth_uri: process.env.translate_auth_uri,
-    token_uri: process.env.translate_token_uri,
-    auth_provider_x509_cert_url: process.env.translate_auth_provider_x509_cert_url,
-    client_x509_cert_url: process.env.translate_client_x509_cert_url
+    credentials: {
+        type: process.env.translate_type,
+        private_key_id: process.env.translate_private_key_id,
+        private_key: process.env.translate_private_key.replace(/\\n/g, '\n'),
+        client_email: process.env.translate_client_email,
+        client_id: process.env.translate_client_id,
+        auth_uri: process.env.translate_auth_uri,
+        token_uri: process.env.translate_token_uri,
+        auth_provider_x509_cert_url: process.env.translate_auth_provider_x509_cert_url,
+        client_x509_cert_url: process.env.translate_client_x509_cert_url
+    }    
 })
 
 const T = new Twit({
@@ -41,6 +43,7 @@ connection.connect()
 
 connection.query('SELECT * FROM tweets', (error, results, fields) => {
     if (error) throw error
+    // console.log(JSON.stringify(results))
     results.forEach(element => {
         processedTweets.ids.push(element.tweet_id)
     })
@@ -61,6 +64,7 @@ const languagePipe = [
 
 T.get('statuses/user_timeline', { screen_name: 'realDonaldTrump', tweet_mode: 'extended', count: 20 }, (err, data, response) => {
     const tweetData = data
+    // console.log(tweetData[0])
     processTweets(tweetData)
 })
 
@@ -109,6 +113,7 @@ const translateTweet = (tweet, id, languageStep, tweetIndex) => {
     if(languageStep < languagePipe.length) {
       translateAPI.translate(tweet, {from: languagePipe[languageStep][0], to: languagePipe[languageStep][1]}).then(res => {
             const tweet = res[0]
+            console.log(tweet)
             newLanguageStep = languageStep + 1
             translateTweet(tweet, id, newLanguageStep, tweetIndex)
         }).catch(err => {
