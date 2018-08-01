@@ -8,14 +8,14 @@ const project = require('./auth/TrumpettaStoneProject.json')
 const TwitterAuth = require('./auth/twitter-auth.json')
 const DbAuth = require('./auth/DbAuth.json')
 
-// list of already processed tweets
-// const processedTweets = require('./processedTweets.json')
 let processedTweets = {ids:[]}
 
 const translateAPI = new Translate({
     projectId: project.projectId,
     keyFilename: './auth/TrumpettaStoneTranslate.json'
 })
+
+console.log(translateAPI)
 
 const T = new Twit({
   consumer_key:         TwitterAuth.consumer_key,
