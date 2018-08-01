@@ -15,8 +15,6 @@ const translateAPI = new Translate({
     keyFilename: './auth/TrumpettaStoneTranslate.json'
 })
 
-console.log(translateAPI)
-
 const T = new Twit({
   consumer_key:         TwitterAuth.consumer_key,
   consumer_secret:      TwitterAuth.consumer_secret,
