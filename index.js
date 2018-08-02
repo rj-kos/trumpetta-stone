@@ -1,3 +1,4 @@
+// snag environment variables
 require('dotenv').load()
 
 // node packages
@@ -5,8 +6,10 @@ const Twit = require('twit')
 const Translate = require('@google-cloud/translate')
 const mysql = require('mysql')
 
+// pretty unnecessary way to do this but I was grabbing the data in a different way originally and this prevented a refactor
 let processedTweets = {ids:[]}
 
+// initiate google translate API Class
 const translateAPI = new Translate({    
     projectId: process.env.translate_project_id,
     credentials: {
@@ -22,6 +25,7 @@ const translateAPI = new Translate({
     }    
 })
 
+// initiate Twitter API Class
 const T = new Twit({
   consumer_key:         process.env.twitter_consumer_key,
   consumer_secret:      process.env.twitter_consumer_secret,
@@ -41,6 +45,7 @@ const connection = mysql.createConnection({
 // start mysql connection
 connection.connect()
 
+// grabbing tweets that have already been "translated"
 connection.query('SELECT * FROM tweets', (error, results, fields) => {
     if (error) throw error
     // console.log(JSON.stringify(results))
@@ -49,9 +54,10 @@ connection.query('SELECT * FROM tweets', (error, results, fields) => {
     })
 })
 
-
+// place to store the tweets that we grab from twitter
 let tweetPipe = []
 
+// list of language steps/iterations for the translate api
 const languagePipe = [
   ['en', 'kk'],
   ['kk', 'ja'],
@@ -62,12 +68,14 @@ const languagePipe = [
   ['zh-tw', 'en']
 ]
 
+// grab the last 20 trump tweets
 T.get('statuses/user_timeline', { screen_name: 'realDonaldTrump', tweet_mode: 'extended', count: 20 }, (err, data, response) => {
     const tweetData = data
     // console.log(tweetData[0])
     processTweets(tweetData)
 })
 
+// should really be called "parseTweets", parses the tweets into a more manageable structure and pushes them into our tweetPipe
 processTweets = (tweets) => {
     for(let i = (tweets.length - 1); i > -1; i--) {
         const trumpRawTweet = tweets[i].full_text
@@ -80,6 +88,7 @@ processTweets = (tweets) => {
     translateTweets(0)
 }
 
+// check if the tweet has already been "translated", return true/false
 const oldTweet = (id) => {
     if(processedTweets.ids.indexOf(id) >= 0) {
         return true
@@ -88,6 +97,7 @@ const oldTweet = (id) => {
     }
 }
 
+// record the tweet to our DB so that we never try to process it again
 const recordTweet = (id, callback) => {
     connection.query(`INSERT INTO tweets (tweet_id) VALUES (${id})`, (error, results, fields) => {
         if (error) throw error
@@ -95,6 +105,7 @@ const recordTweet = (id, callback) => {
     callback()
 }
 
+// the function used to iteratively move through the tweetPipe list
 const translateTweets = (tweetIndex) => {
   if(tweetIndex >= tweetPipe.length) {
         connection.end()
@@ -104,6 +115,8 @@ const translateTweets = (tweetIndex) => {
   translateTweet(tweetPipe[tweetIndex].text, tweetPipe[tweetIndex].id, 0, tweetIndex)
 }
 
+// this actually does the work, it pushes the tweets through the google translate API and calls itself again for the next language unless we've reached the end of the line
+// and have actually reached English - in that case, it sends them off to the tweeting function
 const translateTweet = (tweet, id, languageStep, tweetIndex) => {
     if(oldTweet(id)) {
       const newTweetIndex = tweetIndex + 1
@@ -125,6 +138,7 @@ const translateTweet = (tweet, id, languageStep, tweetIndex) => {
     }
 }
 
+// blasts that tweet off into the internet
 const blastTweet = (tweet, newTweetIndex) => {
   return () => {
     T.post('statuses/update', { status: tweet }, (err, data, response) => {
