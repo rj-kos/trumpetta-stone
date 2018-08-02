@@ -2,6 +2,8 @@
 
 A twitter bot that takes "President" Donald Trump's tweets, feeds them through several rounds of [Google Translate](https://translate.google.com/) languages and then back into English, and then tweets them out via the twitter account ["Trumpetta Stone"](https://twitter.com/TrumpettaStone) (yes, that's a Rosetta Stone pun... I know it's not good)
 
+![alt text](./readme-assets/flower-bed.png)
+
 ## Stack
 - Node.js 8+
 - MySQL
